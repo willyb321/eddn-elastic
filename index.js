@@ -16,7 +16,7 @@ process.on("unhandledRejection", logger.warn);
 
 const pInflate = promisify(zlib.inflate);
 
-console.log("Worker connected to port 9500");
+logger.info("Worker connected to port 9500");
 const eClient = new ElasticClient({
   node: process.env.ELASTIC_HOST,
   maxRetries: 5,
@@ -31,7 +31,6 @@ sock.on("message", msg => processMessage(msg));
 
 async function processMessage(message) {
     let jsonString;
-    console.log('a')
     try {
       jsonString = await pInflate(message);
     } catch (error) {
