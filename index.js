@@ -3,13 +3,18 @@ const zlib = require("zlib");
 const { promisify } = require("util");
 const camelcaseKeys = require("camelcase-keys");
 const { Client: ElasticClient } = require("@elastic/elasticsearch");
+const zmq = require('zeromq');
 
+const sock = zmq.socket('sub');
+
+sock.connect('tcp://eddn.edcd.io:9500');
+
+sock.subscribe('');
 const { logger } = require("./log");
 process.on("uncaughtException", logger.warn);
 process.on("unhandledRejection", logger.warn);
 
 const pInflate = promisify(zlib.inflate);
-const { sock } = require("./eddn");
 
 console.log("Worker connected to port 9500");
 const eClient = new ElasticClient({
@@ -22,12 +27,11 @@ const eClient = new ElasticClient({
     password: process.env.ELASTIC_PASSWORD
   }
 });
-
 sock.on("message", msg => processMessage(msg));
 
 async function processMessage(message) {
-  return new Promise(async (resolve, reject) => {
     let jsonString;
+    console.log('a')
     try {
       jsonString = await pInflate(message);
     } catch (error) {
@@ -35,7 +39,7 @@ async function processMessage(message) {
         `Error processing raw data to string @ ${new Date().toISOString()}`,
         error
       );
-      return reject();
+      return;
     }
 
     if (!jsonString) {
@@ -50,13 +54,12 @@ async function processMessage(message) {
         `Error processing json string to object @ ${new Date().toISOString()}`,
         error
       );
-      return reject();
+      return;
     }
 
     if (!json) {
-      return reject();
+      return;
     }
-
     try {
       json = addComputedFields(json);
     } catch (error) {
@@ -64,11 +67,11 @@ async function processMessage(message) {
         `Error adding extra fields to object @ ${new Date().toISOString()}`,
         error
       );
-      return reject();
+      return;
     }
 
     if (!json) {
-      return reject();
+      return;
     }
 
     try {
@@ -77,12 +80,13 @@ async function processMessage(message) {
         // Type: '_doc', // uncomment this line if you are using Elasticsearch ≤ 6
         body: json
       });
+
     } catch (error) {
-      logger.warn("Error indexing message to Elastic", error);
-      return reject();
+      logger.error("Error indexing message to Elastic", error);
+      return;
     }
-    return resolve();
-  });
+    logger.info(`Inserted message into Elasticsearch @ ${new Date().toISOString()}`)
+    return;
 }
 
 function addComputedFields(message) {
