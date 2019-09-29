@@ -1,0 +1,24 @@
+{
+  "name": "eddn-elastic",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@elastic/elasticsearch": "^7.3.0",
+    "camelcase-keys": "^6.0.1",
+    "dotenv": "^8.1.0",
+    "fs-extra": "^8.1.0",
+    "winston": "^3.2.1",
+    "zeromq": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^12.7.8",
+    "@types/zeromq": "^4.6.2"
+  }
+}
