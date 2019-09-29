@@ -1,14 +1,26 @@
 {
   "name": "eddn-elastic",
   "version": "1.0.0",
-  "description": "",
+  "description": "Index EDDN to an elasticsearch host",
+  "homepage": "https://github.com/willyb321/eddn-elastic",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["eddn", "elite dangerous", "elite", "dangerous", "elasticsearch"],
+  "author": "Willyb321",
   "license": "MIT",
+  "engines": {
+    "npm": ">5",
+    "node": ">9"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/willyb321/eddn-elastic.git"
+  },
+  "bugs": {
+    "url": "https://github.com/willyb321/eddn-elastic/issues"
+  },
   "dependencies": {
     "@elastic/elasticsearch": "^7.3.0",
     "camelcase-keys": "^6.0.1",
