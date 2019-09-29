@@ -23,7 +23,7 @@ const eClient = new ElasticClient({
 
 sock.subscribe("");
 
-sock.on("message", processMessage);
+sock.on("message", msg => processMessage(msg));
 
 async function processMessage(message) {
   let jsonString;
@@ -77,10 +77,6 @@ async function processMessage(message) {
     });
   } catch (error) {
     logger.warn("Error indexing message to Elastic", error);
-    return;
-  }
-
-  if (!res) {
     return;
   }
 }
