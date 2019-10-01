@@ -3,13 +3,13 @@ const zlib = require("zlib");
 const { promisify } = require("util");
 const camelcaseKeys = require("camelcase-keys");
 const { Client: ElasticClient } = require("@elastic/elasticsearch");
-const zmq = require('zeromq');
+const zmq = require("zeromq");
 
-const sock = zmq.socket('sub');
+const sock = zmq.socket("sub");
 
-sock.connect('tcp://eddn.edcd.io:9500');
+sock.connect("tcp://eddn.edcd.io:9500");
 
-sock.subscribe('');
+sock.subscribe("");
 const { logger } = require("./log");
 process.on("uncaughtException", logger.warn);
 process.on("unhandledRejection", logger.warn);
@@ -30,62 +30,64 @@ const eClient = new ElasticClient({
 sock.on("message", msg => processMessage(msg));
 
 async function processMessage(message) {
-    let jsonString;
-    try {
-      jsonString = await pInflate(message);
-    } catch (error) {
-      logger.warn(
-        `Error processing raw data to string @ ${new Date().toISOString()}`,
-        error
-      );
-      return;
-    }
-
-    if (!jsonString) {
-      return;
-    }
-
-    let json;
-    try {
-      json = JSON.parse(jsonString);
-    } catch (error) {
-      logger.warn(
-        `Error processing json string to object @ ${new Date().toISOString()}`,
-        error
-      );
-      return;
-    }
-
-    if (!json) {
-      return;
-    }
-    try {
-      json = addComputedFields(json);
-    } catch (error) {
-      logger.warn(
-        `Error adding extra fields to object @ ${new Date().toISOString()}`,
-        error
-      );
-      return;
-    }
-
-    if (!json) {
-      return;
-    }
-
-    try {
-      await eClient.index({
-        index: `eddn-${json.extra.schema || "unknown"}`,
-        // Type: '_doc', // uncomment this line if you are using Elasticsearch ≤ 6
-        body: json
-      });
-
-    } catch (error) {
-      logger.error("Error indexing message to Elastic", error);
-      return;
-    }
-    logger.info(`Inserted message into Elasticsearch @ ${new Date().toISOString()}`)
+  let jsonString;
+  try {
+    jsonString = await pInflate(message);
+    jsonString = jsonString.toString("utf8");
+  } catch (error) {
+    logger.warn(
+      `Error processing raw data to string @ ${new Date().toISOString()}`,
+      error
+    );
     return;
+  }
+
+  if (!jsonString) {
+    return;
+  }
+
+  let json;
+  try {
+    json = JSON.parse(jsonString);
+  } catch (error) {
+    logger.warn(
+      `Error processing json string to object @ ${new Date().toISOString()}`,
+      error
+    );
+    return;
+  }
+  if (!json) {
+    return;
+  }
+  try {
+    json = addComputedFields(json);
+  } catch (error) {
+    logger.warn(
+      `Error adding extra fields to object @ ${new Date().toISOString()}`,
+      error
+    );
+    return;
+  }
+
+
+  if (!json) {
+    return;
+  }
+
+  try {
+    await eClient.index({
+      index: `eddn-${json.extra.schema || "unknown"}`,
+      // Type: '_doc', // uncomment this line if you are using Elasticsearch ≤ 6
+      body: json
+    });
+  } catch (error) {
+    logger.error("Error indexing message to Elastic", error);
+    return;
+  }
+  logger.info(
+    `Inserted message into Elasticsearch @ ${new Date().toISOString()}`
+  );
+  return;
 }
 
 function addComputedFields(message) {
